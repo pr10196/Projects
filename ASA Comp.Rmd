@@ -1,0 +1,126 @@
+---
+title: "ASA Competition"
+author: "Pranav Rao"
+date: "2024-03-22"
+output: html_document
+---
+
+```{r, echo=FALSE}
+referral_data <- read.csv("TJJD_-_County_Level_Referral_Data__FY_2013-2021_20240305.csv")
+View(referral_data)
+violation_citations <- read.csv("Texas_Commission_on_Environmental_Quality_-_Violation_Citations_20240305.csv")
+accountability_ratings <-read.csv("School_Year_2021-2022_Statewide_Accountability_Ratings_as_of_February_6__2023_20240305.csv")
+informal_complaints <- read.csv("Public_Utility_Commission_of_Texas_-_Informal_Complaints_20240305.csv")
+economic_indicators <- read.csv("Key_Economic_Indicators_20240305.csv")
+public_univ_grad_rates <-read.csv("Graduation_Rates_at_Public_Universities_2019-2021_20240305.csv")
+local_gov_ISD_debt <- read.csv("Debt_Outstanding_By_Local_Government_ISD_20240305.csv")
+local_gov_debt <- read.csv("Debt_Outstanding_By_Local_Government_20240305.csv")
+recidivism <- read.csv("APS_5.2_Outcomes__Recidivism_by_County_FY2014-2023_20240305.csv")
+```
+
+```{r}
+library(dplyr)
+library(treemap)
+
+referral_data <- read.csv("TJJD_-_County_Level_Referral_Data__FY_2013-2021_20240305.csv")
+
+county_referrals <- referral_data %>%
+  group_by(County) %>%
+  summarise(total_referrals = sum(Referrals)) %>%
+  arrange(desc(total_referrals))  # Arrange by descending order of total referrals
+
+# Create treemap
+treemap(county_referrals,
+        index = "County",
+        vSize = "total_referrals",
+        title = "Total Referrals by County",
+        fontsize.labels = 10)
+```
+
+
+```{r}
+## STILL DOING COUNTY LEVEL REFERRAL DATA 
+
+# Load the dataset
+referral_data <- read.csv("TJJD_-_County_Level_Referral_Data__FY_2013-2021_20240305.csv")
+
+# Calculate the total number of each type of referral by county
+referral_data <- referral_data %>%
+  group_by(County) %>%
+  summarise(
+    Violent_Felony = sum(Violent.Felony),
+    Other_Felony = sum(Other.Felony),
+    Misdemeanor = sum(Misd.),  # Assuming 'Misd.' is the correct column name
+    VOP = sum(VOP),
+    Status = sum(Status),
+    Other_CINS = sum(Other.CINS)
+  )
+
+# Convert data to long format for plotting
+referral_data_long <- referral_data %>%
+  pivot_longer(cols = c(Violent_Felony, Other_Felony, Misdemeanor, VOP, Status, Other_CINS),
+               names_to = "Referral_Type", values_to = "Total_Referrals")
+
+# Create stacked bar chart with modified x-axis labels
+ggplot(referral_data_long, aes(x = County, y = Total_Referrals, fill = Referral_Type)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Distribution of Referrals by Type and County",
+       x = "County",
+       y = "Total Referrals",
+       fill = "Referral Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8)) +
+  scale_x_discrete(labels = function(x) ifelse(seq_along(x) %% 5 == 0, x, ""))
+```
+
+
+```{r}
+## DEBT OUTSTANDING BY LOCAL GOVT DATASET
+
+local_gov_debt <- read.csv("Debt_Outstanding_By_Local_Government_20240305.csv")
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Remove rows with missing values
+clean_data <- drop_na(local_gov_debt)
+
+# Define the valid government types
+valid_types <- c("CITY", "WD", "HHD", "OSD", "CCD", "COUNTY", "ISD")
+
+# Filter data for Texas based on valid government types
+texas_data <- clean_data %>%
+  filter(GovernmentType %in% valid_types)
+
+# Find all unique types of governments within the GovernmentType variable
+unique_government_types <- unique(texas_data$GovernmentType)
+unique_government_types
+
+# 1. Stacked Bar Chart of Total Debt by Government Type
+total_debt_by_type <- texas_data %>%
+  group_by(GovernmentType) %>%
+  summarize(TotalDebt = sum(TotalDebtServiceOutstanding))
+
+bar_plot <- ggplot(total_debt_by_type, aes(x = reorder(GovernmentType, -TotalDebt), y = TotalDebt, fill = GovernmentType)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Total Debt by Government Type in Texas",
+       x = "Government Type",
+       y = "Total Debt",
+       fill = "Government Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+stacked_area_plot <- ggplot(texas_data, aes(x = FiscalYear, y = TotalDebtServiceOutstanding, fill = GovernmentType)) +
+  geom_area(position = "stack") +
+  labs(title = "Debt Service Payments Over Time by Government Type in Texas",
+       x = "Fiscal Year",
+       y = "Total Debt Service Outstanding",
+       fill = "Government Type") +
+  theme_minimal()
+
+# Print the plots
+bar_plot
+stacked_area_plot
+```
+
