@@ -1,0 +1,151 @@
+---
+title: "Project 2"
+author: "Pranav Rao"
+date: "2023-11-08"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(rvest)
+```
+
+## Question 1
+
+The dataset that I chose contains a ranked list of the NCAA men's college basketball players who scored the most points per game (PPG) throughout the 2022-2023 season. The dataset also includes significant variables such as classification, team, and position. This dataset is from NCAA.com, a website that contains many years of statistics and history of the National Collegiate Athletic Association (NCAA).I chose this college basketball dataset because I have a strong passion for basketball, and I want to utilize my knowledge into analyzing relationships within basketball statistics. I desire to continue gaining experience in analyzing statistical patterns of basketball and hopefully work for a basketball or a general sports company in the near future. I plan on utilizing the Classification (CL), Position, Points Per Game (PPG), and Field Goals Made (FGM) variables and analyze how many players average and what averages are found the most for these four variables in univariate graphs. I also plan to compare the correlation between Field Goals Made (FGM), Three Pointers Made (TPM), Free Throws Made (FTM), and Games variables and the Points Per Game (PPG) variable through skatterplot graphs. Creating this analysis will better help me understand if there is a relationship between the amount of points the best D1 NCAA men's basketball players can score based on their Position, Classification, Points Per Game, Field Goals Made, Three Pointers Made, Free Throws Made, and the amount of Games that they have played.
+
+```{r, echo=FALSE, out.width='50%'}
+library(knitr)
+include_graphics("https://i.pinimg.com/originals/c6/1d/b6/c61db6306e5a2ddde148b008508d4910.jpg")
+```
+
+**cdn.lifehack.org/wp-content/uploads/2015/04/Gaming-console.jpg. Accessed 9 Nov. 2023.**
+
+[-Link for dataset source-](https://www.ncaa.com/stats/basketball-men/d1/current/individual/136)
+
+## Question 2
+
+I obtained this dataset by manually scraping the website and processed the data from the dataset by creating variables for the three variables I will primarily analyze: Classification, Position, and Points Per Game. My dataset does not contain any N/A values, as all of the players listed all have numeric values for the the amount of points per game and the amount of field goals that they score in a game. My dataset accumulated a total amount of 100 observations.
+
+## Question 3
+
+```{r, echo=FALSE}
+Classification=c()
+Pos=c()
+PPG=c()
+FGM=c()
+TPM=c()
+FTM=c()
+Games=c()
+
+
+for (i in 1:2) {
+  bball_link =  paste("https://www.ncaa.com/stats/basketball-men/d1/current/individual/136/p", i, sep="")
+  bball_page = read_html(bball_link)
+  bball_classif = html_text(html_elements(bball_page,"td:nth-child(4)"))
+  bball_pos <- html_text(html_elements(bball_page,"td:nth-child(6)"))
+  bball_ppg <- html_text(html_elements(bball_page,"td:nth-child(12)"))
+  bball_fgm <- html_text(html_elements(bball_page,"td:nth-child(8)"))
+  bball_3ptmade <-html_text(html_elements(bball_page,"td:nth-child(9)")) 
+  bball_ftmade <- html_text(html_elements(bball_page,"td:nth-child(10)"))
+  bball_games <- html_text(html_elements(bball_page,"td:nth-child(7)"))
+  
+  bball_ppg <- as.numeric(bball_ppg)
+  bball_fgm <- as.numeric(bball_fgm)
+  bball_3ptmade <- as.numeric(bball_3ptmade)
+  bball_ftmade <- as.numeric(bball_ftmade)
+  bball_games < as.numeric(bball_games)  
+  
+  Classification <- c(Classification, bball_classif)
+  Pos <- c(Pos, bball_pos)
+  PPG <- c(PPG, bball_ppg)
+  FGM <- c(FGM, bball_fgm)
+  TPM <- c(TPM, bball_3ptmade)
+  FTM <- c(FTM, bball_ftmade)
+  Games <- c(Games, bball_games)
+}
+ncaa_tibble <- tibble(Classification, Pos, PPG, FGM, TPM, FTM, Games)
+ncaa_tibble
+
+#bball_ppg <- as.numeric(bball_ppg)
+  #bball_fgm <- as.numeric(bball_fgm)
+  #bball_3ptmade <- as.numeric(bball_3ptmade)
+  #bball_ftmade <- as.numeric(bball_ftmade)
+  #bball_games < as.numeric(bball_games) 
+
+```
+
+
+## Question 4
+
+The graph that displays the distribution of the year classification of the top NCAA scorers is skewed left. Similarly, the second graph displaying the distribution of the positions of the top NCAA scorers is also skewed left. In comparison, the graph displaying the distribution of the points per game that the top scorers average is right skewed, thereby exemplifying a negative skewness. In adddition, the mean of this graph is `r mean(PPG)`. Lastly, the graph displaying the distribution of the field goals that the top players have made is unimodal and approximately symmetric, and the mean of this graph is `r mean(FGM)`.     
+
+```{r, echo=FALSE}
+library(ggplot2)
+gg_ncaa <- ggplot(ncaa_tibble)
+gg_ncaa + geom_bar(aes(x=Classification), fill = 'purple', color = 'black') + labs(title = "Distribution of the Classifications of the Top 100 NCAA Scorers", x = "Classification (CL)")
+gg_ncaa + geom_bar(aes(x=Pos), fill = 'blue', color = 'black') + labs(title = "Distribution of the Positions of the Top 100 NCAA Scorers", x = "Position (POS)")
+gg_ncaa + geom_bar(aes(x=PPG), fill = 'orange', color = 'black') + labs(title = "Distribution of the Points Per Game of the Top 100 NCAA Scorers", x = "Points Per Game (PPG)")
+mean_PPG <- mean(PPG)
+mean_PPG
+gg_ncaa + geom_bar(aes(x=FGM), fill = 'red', color = 'black') + labs(title = "Distribution of the Field Goals Made of the Top 100 NCAA Scorers", x = "Field Goals Made (FGM)")
+mean_FGM <- mean(FGM)
+mean_FGM
+```
+
+## Question 5
+
+The amount of field goals that a player makes and the points per game that they average displays a strong, positive linear correlation. The value of the correlation is `r cor(ncaa_tibble$FGM, ncaa_tibble$PPG)`. In comparison, the amount of 3 pointers a player makes and the points per game that they average does not display a linear relationship, as the correlation is `r cor(ncaa_tibble$TPM, ncaa_tibble$PPG)`. The correlation between the amount of free throws a player makes and the points per game that they average displays a weak, positive linear relationship. The value of the correlation is `r cor(ncaa_tibble$FTM, ncaa_tibble$PPG)`. Lastly, the correlation between the amount of games a player plays and the points per game that they average does not display a linear relationship between the two variables, as the value of the correlation is -0.06232532.        
+
+
+```{r, echo=FALSE}
+ncaa_tibble$PPG <- as.numeric(ncaa_tibble$PPG)
+ncaa_tibble$FGM <- as.numeric(ncaa_tibble$FGM)
+ncaa_tibble$TPM <- as.numeric(ncaa_tibble$TPM)
+ncaa_tibble$FTM <- as.numeric(ncaa_tibble$FTM)
+ncaa_tibble$Games <- as.numeric(ncaa_tibble$Games)
+
+gg_ncaa + geom_point(aes(x=FGM, y=PPG)) + 
+    labs(title='Correlation between the Amount of Field Goals and Points Per Game', x='Field Goals Made',y='Points Per Game')
+cor(ncaa_tibble$FGM, ncaa_tibble$PPG)
+
+gg_ncaa + geom_point(aes(x=TPM, y=PPG)) + 
+    labs(title='Correlation between 3 Pointers Made and the Points Per Game', x='Three Pointers Made',y='Points Per Game')
+cor(ncaa_tibble$TPM, ncaa_tibble$PPG)
+
+gg_ncaa + geom_point(aes(x=FTM, y=PPG)) + 
+    labs(title='Correlation between Free Throws Made and the Points Per Game', x='Free Throws Made',y='Points Per Game')
+cor(ncaa_tibble$FTM, ncaa_tibble$PPG)
+
+gg_ncaa + geom_point(aes(x=Games, y=PPG)) + 
+    labs(title='Correlation between the Amount of Games and Points Per Game', x='Games',y='Points Per Game')
+cor(ncaa_tibble$Games, ncaa_tibble$PPG)
+```
+
+## Question 6
+
+I ensured that this report could be reproduced by others by repeatedly checking its ability to be knitted to a html file after completing each question. Additionally, I sent one friend my R Markdown file and asked him to knit the file himself in order to further ensure that the file can be reproduced for the TA and others who desire to knit my R Markdown file.
+
+
+## Question 7
+
+Throughout the report, I included the merging of two datasets by utilizing a for loop in lines 46 to 70, as I needed to combine two pages of the same dataset into one complete dataset for analyis in the univariate and multivariate graphs. I also manually web scraped each categorical and numeric variable that I utilized in the univariate and multivariate graphs in this project in lines 9 to 50, which were Classification, Position (Pos), Points Per Game (PPG), Field Goals Made (FGM), Three Pointers Made (TPM), Free Throws Made (FTM), and Games. I formatted the "Games" variable, which was listed as a character instead of a double, and I made it produce numerical outputs for the number of games that each player played by creating the for loop in lines 46 to 70. Additionally, I used five in-line codes throughout the report to display the means of the points per game and the field goals made in two separate univariate graphs, and I produced the remaining three in-line code in the following multivariate graphs: Field Goals Made and Points Per Game, Three Pointers Made and Points Per Game, and the Free Throws Made and Points Per Game graphs. Lastly, I utilized a for loop in order to efficiently produce the combined tibbles of my dataset. Creating the for loop allowed me to paste one link from the website of my dataset instead of storing both of the website links as separate variables.
+
+## Question 8
+While analyzing the univariate graphs, my expectation for the distribution of the classification of the top ranked NCAA players based on Points Per Game (PPG) was accurate, as the mode of the graph was Seniors, followed by Juniors, Sophomores, and Freshman in the exact order. Similarly, my expectation for the distribution of the positions of the top ranked NCAA players based on Points Per Game (PPG) for the guards (G) to be the mode and the forwards (F) and centers (C) to be considerably smaller was also accurate. I expected the distribution of the Poitns Per Game (PPG) univariate graph to have a mean of around 23 PPG, which was accurate as the mean of this graph is approximately 24 PPG. Lastly, I expected the final unimodal graph displaying the distribution of the Field Goals Made (FGM) by the top 100 NCAA scorers to have a mean of 12 FGM, but the actual mean was approximately 10 FGM. In comparison, while analyzing the multivariable graphs, I believed that the first scatterplot that I produced, "The Correlation between the Amount of Field Goals and Points Per Game" would have a strong, positive, and linear relationship because of the need to make many field goals in order to score more points, and my expectation was accurate. My expectation for the second scatterplot, the "Correlation between 3 Pointers Made and the Points Per Game", to have a strong, positive, and linear relationship was inaccurate, as the correlation of the scatterplot was 0.04559779.My expectations for the third scatterplot was also inaccurate, as I believed that there was not a linear relationship between the Free Throws Made (FTM) and Points Per Game (PPG), but the graph had a correlation of 0.1844998. Lastly, I expected the final scatterplot, the "Correlation between the Amount of Games and Points Per Game', x='Games',y='Points Per Game", to not have a linear relationship and produce a negative correlation, as there were not enough games included in the online NCAA dataset, and my expectation was correct, with the scatterplot having a correlation of -0.06232532.              
+
+
+## Question 9
+
+“NCAA College Men’s Basketball D1 Current Individual Stats.” NCAA.Com, NCAA.com, 9 Nov. 2023, www.ncaa.com/stats/basketball-men/d1/current/individual/136. 
+
+cdn.lifehack.org/wp-content/uploads/2015/04/Gaming-console.jpg. Accessed 10 Nov. 2023.
+
+```{r, echo=FALSE}
+csv_file_path <- "/Users/phisf/OneDrive/Documents/SDS/app.R/ncaa_data_2.csv"
+write.csv(ncaa_tibble, file = csv_file_path, row.names = FALSE)
+```
